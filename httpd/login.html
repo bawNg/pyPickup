@@ -1,0 +1,123 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <title>pyPickupBot Admin Web Interface</title>
+    
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+    
+    <link rel="stylesheet" href="screen.css" type="text/css" media="screen, projection" />
+    <!--[if lt IE 8]><link rel="stylesheet" href="ie.css" type="text/css" media="screen, projection" /><![endif]-->
+    <link rel="stylesheet" href="css/ui-lightness/jquery-ui-1.7.2.custom.css" type="text/css" />
+    <link rel="stylesheet" href="stylesheet.css" type="text/css" />
+    
+    <style type="text/css">
+        body { font-size: 62.5%; }
+        label, input { display:block; }
+        input.text { margin-bottom:12px; width:95%; padding: .4em; }
+        fieldset { padding:0; border:0; margin-top:10px; margin-bottom: -2px; }
+        h1 { font-size: 1.2em; margin: .6em 0; }
+        .ui-button { outline: 0; margin:0; padding: .4em 1em .5em; text-decoration:none;  !important; cursor:pointer; position: relative; text-align: center; }
+        .ui-dialog .ui-state-highlight, .ui-dialog .ui-state-error { padding: .3em;  }
+        .ui-progressbar-value { background-image: url(/css/ui-lightness/images/pbar-ani.gif); }
+        #dialog { overflow: hidden; }
+        #status { text-align: right; }
+    </style>
+    
+    <script type="text/javascript" charset="utf-8" src="jquery-1.3.2.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="jquery-ui-1.7.2.custom.min.js"></script>
+    <script type="text/javascript">
+        function getUpdate() {
+            $.post("/auth", { 'request': 'update', 'nickname': $('#nickname').val() },
+                function(data){
+                    if (data.status == "requesting") {
+                        $('#status').html("Please accept the DCC chat request on IRC...");
+                        if ($("#progressbar").progressbar({'option': 'value'}) < 80) {
+                            var currentValue = $("#progressbar").progressbar({'option': 'value'});
+                            $('#progressbar').progressbar('option', 'value', currentValue + 5);
+                        }
+                        if ($("#dialog").dialog('isOpen')) { setTimeout("getUpdate();", 500); }
+                    } else if (data.status == "offline") {
+                        $('#status').html("Nickname offline on IRC.");
+                        $('#progressbar').hide();
+                        $("#dialog").dialog.isWorking = false;
+                    } else if (data.status == "not_admin") {
+                        $('#status').html("Nickname does not have admin privileges.");
+                        $('#progressbar').hide();
+                        $("#dialog").dialog.isWorking = false;
+                    } else if (data.status == "authorized") {
+                        $('#status').html("You have been authorized. Logging in...");
+                        $('#progressbar').progressbar('option', 'value', 100);
+                        window.location.reload(true);
+                    } else if (data.status == "denied") {
+                        $('#status').html("Your request was denied.");
+                        $('#progressbar').progressbar('option', 'value', 0);
+                        $("#dialog").dialog.isWorking = false; 
+                    }
+                },
+            "json");
+        }
+        $(function() {
+            $("#dialog").dialog({
+                bgiframe: true,
+                autoOpen: true,
+                height: 200,
+                modal: true,
+                buttons: {
+                        'Request authorization': function() {
+                            if ($("#dialog").dialog.isWorking == true) {
+                                $('#status').html("Already requesting auth...");
+                                return;
+                            } else if ($('#nickname').val() == "") {
+                                $('#status').html("Please enter a nickname to request auth.");
+                                setTimeout("$('#status').html('');", 1000);
+                                return;
+                            }
+                            $("#dialog").dialog.isWorking = true;
+                            $('#nickname').attr('disabled', '');
+                            $.post("/auth", { 'request': 'auth', 'nickname': $('#nickname').val() },
+                                function(data){
+                                    if (data.status == "banned") {
+                                        var status = "Your IP address has been banned for possible abuse.<br />";
+                                        status += '<span style="font-size: x-small;">If you require access, use the "!authme" command from IRC.</span>';
+                                        $('#status').html(status);
+                                        $("#dialog").dialog.isWorking = false;
+                                    } else if (data.status == "requesting") {
+                                        $("#progressbar").progressbar({ value: 25 });
+                                        setTimeout("getUpdate();", 250);
+                                    }
+                                },
+                            "json");
+                        },
+                        Cancel: function() {
+                            $("#dialog").dialog.isWorking = false;
+                            $(this).dialog('close');
+                            window.location.reload(true);
+                        }
+                },
+                close: function() {
+                    $("#dialog").dialog.isWorking = false;
+                    window.location.reload(true);
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <div id="message_box" title="Unauthorized access" style="display: none;">
+        <div id="msg_box_status">
+            Your IP address is not authorized to access this interface.<br />
+            If you should have access, please use the "!authme" command from IRC.
+        </div>
+    </div>
+    <div id="dialog" title="Unauthorized access">
+        <form action="/auth">
+        <fieldset>
+            <label for="nickname">IRC Nickname</label>
+            <input type="text" name="nickname" id="nickname" size="10" class="text ui-widget-content ui-corner-all" />
+        </fieldset>
+        <div id="status"></div>
+        <div id="progressbar" style="height:20px;"></div>
+        </form>
+    </div>
+</body>
+</html>
