@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+
+# IRC config
+class irc:
+    server      = "irc.server.address"
+    port        = 6667
+    channel     = "#channel"
+    nickname    = ("pyPickup", "pyPickup")
+    password    = "secret"
+    admins      = ["defirence"]
+
+# Default pickup config
+class defaults:
+    #           -IS- TF2 PICKUP 1           SGS TF2 PICKUP I        SGS TF2 PICKUP II
+    servers = [('196.38.180.26', 27175), ('196.4.79.74', 27015), ('196.4.79.74', 27016)]
+    password_base = "tf2" # what generated passwords should start with
+    max_players = 24
+    time_flood_protect = 5 # seconds to wait before displaying teams
+    time_before_close = 10 # seconds after game full before in-progress
+    maps = ['arena_lumberyard', 'arena_ravine', 'cp_badlands', 'cp_dustbowl', 'cp_egypt', 'cp_fastlane', \
+            'cp_follower', 'cp_freight', 'cp_granary', 'cp_gravelpit', 'cp_junction_v2', 'cp_labor', \
+            'cp_resonance_b6', 'cp_stag', 'cp_steel', 'cp_turbine', 'cp_warpath2', 'cp_well', 'ctf_2fort', \
+            'ctf_mach4', 'ctf_turbine', 'ctf_well', 'plr_pipeline', 'pl_badwater', 'pl_goldrush', 'pl_hoodoo_final', \
+            'cp_warpath2', 'ctf_bball2']
+
+    web_interface = { 'port': 8888, 'is_enabled': True, 'allow_web_auth_request': True } #TODO: implement
+
+    is_rcon_password = "secret"
+
+    # SAIX config
+    saix_web_username = "username"
+    saix_web_password = "secret"
